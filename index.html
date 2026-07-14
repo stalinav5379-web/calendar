@@ -30,6 +30,68 @@
       margin: 0 auto;
     }
 
+    /* ── AUTH SCREEN ── */
+    .auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 36px 28px 32px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(91,138,240,0.12);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+
+    .auth-logo { font-size: 44px; text-align: center; margin-bottom: 12px; }
+
+    .auth-title {
+      font-size: 22px; font-weight: 700;
+      text-align: center; margin-bottom: 6px;
+    }
+
+    .auth-sub {
+      font-size: 14px; color: var(--text-sec);
+      text-align: center; margin-bottom: 28px;
+    }
+
+    .auth-input {
+      width: 100%; border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 13px 15px;
+      font-size: 15px; font-family: inherit;
+      color: var(--text); background: var(--surface2);
+      outline: none; margin-bottom: 12px;
+      transition: border-color 0.15s;
+      appearance: none; -webkit-appearance: none;
+    }
+    .auth-input:focus { border-color: var(--today-color); }
+
+    .auth-btn {
+      width: 100%; padding: 14px;
+      background: var(--today-color); color: white;
+      border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      margin-top: 4px;
+      transition: opacity 0.15s;
+    }
+    .auth-btn:disabled { opacity: 0.6; }
+
+    .auth-error {
+      margin-top: 14px; padding: 11px 14px;
+      background: #FDE8EF; color: #E53E6B;
+      border-radius: 10px; font-size: 14px;
+      text-align: center; display: none;
+    }
+
     /* ── HEADER ── */
     .header {
       background: var(--surface);
@@ -59,11 +121,21 @@
       min-width: 155px; text-align: center;
     }
 
+    .header-right { display: flex; align-items: center; gap: 8px; }
+
     .today-btn {
       background: var(--today-color); color: white;
       border: none; border-radius: 10px;
       padding: 8px 14px; font-size: 13px; font-weight: 600;
       cursor: pointer; font-family: inherit;
+    }
+
+    .signout-btn {
+      width: 34px; height: 34px;
+      background: var(--surface2); border: none; border-radius: 10px;
+      cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-sec);
     }
 
     /* ── WEEKDAYS ── */
@@ -107,13 +179,10 @@
       margin: 0 auto 3px;
       color: var(--text);
     }
-    .day-cell.today-cell .day-num {
-      background: var(--today-color); color: white;
-    }
+    .day-cell.today-cell .day-num { background: var(--today-color); color: white; }
     .day-cell.past-day .day-num { color: #B0B8D4; }
 
     .event-dots { display: flex; flex-direction: column; gap: 2px; padding: 0 1px; }
-
     .event-dot {
       height: 15px; border-radius: 4px;
       padding: 0 3px; font-size: 9.5px; font-weight: 500;
@@ -121,11 +190,7 @@
       overflow: hidden; white-space: nowrap;
     }
     .event-dot.ev-past { opacity: 0.35; filter: grayscale(0.3); }
-
-    .more-count {
-      font-size: 9px; color: var(--text-sec);
-      text-align: center; margin-top: 1px;
-    }
+    .more-count { font-size: 9px; color: var(--text-sec); text-align: center; margin-top: 1px; }
 
     /* ── DAY PANEL ── */
     .day-panel {
@@ -191,11 +256,7 @@
       to   { transform: translateY(0);    opacity: 1; }
     }
 
-    .modal-handle {
-      width: 38px; height: 4px;
-      background: var(--border); border-radius: 2px;
-      margin: 0 auto 18px;
-    }
+    .modal-handle { width: 38px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
     .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
 
     .form-group { margin-bottom: 14px; }
@@ -263,45 +324,69 @@
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-nav">
-    <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
-    <div class="month-title" id="month-title"></div>
-    <button class="nav-btn" onclick="changeMonth(1)">›</button>
+<!-- ═══ AUTH SCREEN ═══ -->
+<div id="auth-screen" style="display:none">
+  <div class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">📅</div>
+      <div class="auth-title">Мой Календарь</div>
+      <div class="auth-sub">Введите email и пароль для входа</div>
+      <form onsubmit="signIn(event)">
+        <input type="email" id="auth-email" class="auth-input" placeholder="Email" autocomplete="email" required>
+        <input type="password" id="auth-pass" class="auth-input" placeholder="Пароль" autocomplete="current-password" required>
+        <button type="submit" class="auth-btn" id="auth-btn">Войти</button>
+      </form>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
   </div>
-  <button class="today-btn" onclick="goToday()">Сегодня</button>
 </div>
 
-<!-- WEEKDAYS -->
-<div class="weekdays">
-  <div class="weekday">Пн</div>
-  <div class="weekday">Вт</div>
-  <div class="weekday">Ср</div>
-  <div class="weekday">Чт</div>
-  <div class="weekday">Пт</div>
-  <div class="weekday we">Сб</div>
-  <div class="weekday we">Вс</div>
-</div>
+<!-- ═══ APP ═══ -->
+<div id="app" style="display:none">
 
-<!-- GRID -->
-<div class="calendar-grid" id="cal-grid"></div>
-
-<!-- DAY PANEL -->
-<div class="day-panel">
-  <div class="day-panel-header">
-    <div class="day-panel-title" id="panel-title">Выберите день</div>
-    <button class="add-btn" id="add-btn" style="display:none" onclick="openAdd()">+</button>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-nav">
+      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="month-title" id="month-title"></div>
+      <button class="nav-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="header-right">
+      <button class="today-btn" onclick="goToday()">Сегодня</button>
+      <button class="signout-btn" onclick="signOut()" title="Выйти">↪</button>
+    </div>
   </div>
-  <div id="day-events"></div>
+
+  <!-- WEEKDAYS -->
+  <div class="weekdays">
+    <div class="weekday">Пн</div>
+    <div class="weekday">Вт</div>
+    <div class="weekday">Ср</div>
+    <div class="weekday">Чт</div>
+    <div class="weekday">Пт</div>
+    <div class="weekday we">Сб</div>
+    <div class="weekday we">Вс</div>
+  </div>
+
+  <!-- GRID -->
+  <div class="calendar-grid" id="cal-grid"></div>
+
+  <!-- DAY PANEL -->
+  <div class="day-panel">
+    <div class="day-panel-header">
+      <div class="day-panel-title" id="panel-title">Выберите день</div>
+      <button class="add-btn" id="add-btn" style="display:none" onclick="openAdd()">+</button>
+    </div>
+    <div id="day-events"></div>
+  </div>
+
 </div>
 
-<!-- MODAL -->
+<!-- ═══ MODAL ═══ -->
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
-  <div class="modal" id="modal">
+  <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="modal-title">Новое событие</div>
-
     <div class="form-group">
       <label class="form-label">Название *</label>
       <input type="text" id="f-title" class="form-input" placeholder="Например: Встреча с врачом">
@@ -363,9 +448,50 @@ let curYear, curMonth, selectedDate = null;
 let editId = null, selColor = 'c1';
 
 // ════════════════════════════════════
-// BOOT
+// AUTH
 // ════════════════════════════════════
-(async () => {
+async function boot() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    showApp();
+  } else {
+    document.getElementById('auth-screen').style.display = 'block';
+  }
+}
+
+async function signIn(e) {
+  e.preventDefault();
+  const btn = document.getElementById('auth-btn');
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Входим...';
+
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+
+  const { error } = await db.auth.signInWithPassword({ email, password: pass });
+
+  if (error) {
+    errEl.textContent = 'Неверный email или пароль';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  } else {
+    document.getElementById('auth-screen').style.display = 'none';
+    showApp();
+  }
+}
+
+async function signOut() {
+  await db.auth.signOut();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'block';
+  document.getElementById('auth-pass').value = '';
+}
+
+async function showApp() {
+  document.getElementById('app').style.display = 'block';
   const now = new Date();
   curYear = now.getFullYear(); curMonth = now.getMonth();
   document.getElementById('day-events').innerHTML =
@@ -373,10 +499,10 @@ let editId = null, selColor = 'c1';
   await load();
   render();
   pick(today());
-})();
+}
 
 // ════════════════════════════════════
-// SUPABASE
+// SUPABASE DATA
 // ════════════════════════════════════
 async function load() {
   const { data, error } = await db.from('events').select('*')
@@ -434,16 +560,16 @@ function render() {
 }
 
 function cell(y, m, d, other, now) {
-  const ds     = fmtDate(y, m, d);
-  const todayS = today();
-  const past   = ds < todayS;
+  const ds      = fmtDate(y, m, d);
+  const todayS  = today();
   const isToday = ds === todayS;
-  const isSel  = ds === selectedDate;
+  const isPast  = ds < todayS;
+  const isSel   = ds === selectedDate;
 
   const el = document.createElement('div');
   el.className = 'day-cell' +
     (other   ? ' other-month' : '') +
-    (past    ? ' past-day'    : '') +
+    (isPast  ? ' past-day'    : '') +
     (isToday ? ' today-cell'  : '') +
     (isSel   ? ' selected'    : '');
   el.onclick = () => pick(ds);
@@ -504,7 +630,6 @@ function pick(ds) {
     `${DAYS[dt.getDay()]}, ${d} ${MONTHS[m-1]}`;
   document.getElementById('add-btn').style.display = 'flex';
   renderDay(ds);
-  document.querySelector('.day-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function renderDay(ds) {
@@ -599,9 +724,7 @@ function openEdit(ev) {
   document.getElementById('overlay').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('overlay').classList.remove('open');
-}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 
 function overlayClick(e) {
   if (e.target === document.getElementById('overlay')) closeModal();
@@ -636,7 +759,7 @@ async function del(id) {
 // ════════════════════════════════════
 // TIME INPUT MASK
 // ════════════════════════════════════
-document.getElementById('f-time').addEventListener('input', function(e) {
+document.getElementById('f-time').addEventListener('input', function() {
   let v = this.value.replace(/\D/g, '').slice(0, 4);
   if (v.length >= 3) v = v.slice(0,2) + ':' + v.slice(2);
   this.value = v;
@@ -646,7 +769,7 @@ document.getElementById('f-time').addEventListener('blur', function() {
   const v = this.value;
   if (!v) return;
   const m = v.match(/^(\d{1,2}):(\d{2})$/);
-  if (!m) { this.value = ''; toast('Формат времени: ЧЧ:ММ (например 14:30)'); return; }
+  if (!m) { this.value = ''; toast('Формат: ЧЧ:ММ, например 14:30'); return; }
   const h = parseInt(m[1]), min = parseInt(m[2]);
   if (h > 23 || min > 59) { this.value = ''; toast('Некорректное время'); return; }
   this.value = String(h).padStart(2,'0') + ':' + String(min).padStart(2,'0');
@@ -661,6 +784,11 @@ function toast(msg) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2500);
 }
+
+// ════════════════════════════════════
+// START
+// ════════════════════════════════════
+boot();
 </script>
 </body>
 </html>
