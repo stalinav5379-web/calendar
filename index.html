@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Мой Календарь">
+  <title>Мой Календарь</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg: #EEF3FF;
+      --surface: #FFFFFF;
+      --surface2: #F5F8FF;
+      --text: #1A1F36;
+      --text-sec: #6B7494;
+      --border: #E8ECF8;
+      --today-color: #5B8AF0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--surface);
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 12px rgba(91,138,240,0.08);
+    }
+
+    .header-nav { display: flex; align-items: center; gap: 6px; }
+
+    .nav-btn {
+      width: 36px; height: 36px;
+      border: none; background: var(--surface2); border-radius: 10px;
+      cursor: pointer; font-size: 18px; color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .nav-btn:active { background: var(--border); }
+
+    .month-title {
+      font-size: 17px; font-weight: 700;
+      min-width: 155px; text-align: center;
+    }
+
+    .today-btn {
+      background: var(--today-color); color: white;
+      border: none; border-radius: 10px;
+      padding: 8px 14px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+    }
+
+    /* ── WEEKDAYS ── */
+    .weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      background: var(--surface);
+      padding: 8px 10px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .weekday {
+      text-align: center; font-size: 11px; font-weight: 600;
+      color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .weekday.we { color: #F281A8; }
+
+    /* ── GRID ── */
+    .calendar-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 1px; background: var(--border);
+      border-radius: 0 0 20px 20px; overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .day-cell {
+      background: var(--surface);
+      min-height: 70px;
+      padding: 5px 3px 3px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .day-cell:active { background: #EFF3FF; }
+    .day-cell.other-month { background: #FAFBFF; }
+    .day-cell.other-month .day-num { color: #D0D5EE; }
+    .day-cell.selected { background: #EFF4FF; }
+
+    .day-num {
+      width: 24px; height: 24px;
+      border-radius: 7px;
+      font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 3px;
+      color: var(--text);
+    }
+    .day-cell.today-cell .day-num {
+      background: var(--today-color); color: white;
+    }
+    .day-cell.past-day .day-num { color: #B0B8D4; }
+
+    .event-dots { display: flex; flex-direction: column; gap: 2px; padding: 0 1px; }
+
+    .event-dot {
+      height: 15px; border-radius: 4px;
+      padding: 0 3px; font-size: 9.5px; font-weight: 500;
+      display: flex; align-items: center;
+      overflow: hidden; white-space: nowrap;
+    }
+    .event-dot.ev-past { opacity: 0.35; filter: grayscale(0.3); }
+
+    .more-count {
+      font-size: 9px; color: var(--text-sec);
+      text-align: center; margin-top: 1px;
+    }
+
+    /* ── DAY PANEL ── */
+    .day-panel {
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      padding: 16px 18px 100px;
+      box-shadow: 0 -4px 20px rgba(91,138,240,0.08);
+    }
+
+    .day-panel-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .day-panel-title { font-size: 15px; font-weight: 700; }
+
+    .add-btn {
+      width: 34px; height: 34px;
+      background: var(--today-color); color: white;
+      border: none; border-radius: 10px;
+      font-size: 22px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── EVENT CARD ── */
+    .event-card {
+      border-radius: 14px; padding: 11px 13px;
+      margin-bottom: 9px;
+      display: flex; align-items: flex-start; gap: 10px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.1s;
+    }
+    .event-card:active { transform: scale(0.98); }
+    .event-card.ev-past { opacity: 0.4; }
+
+    .ev-bar { width: 4px; min-height: 32px; border-radius: 2px; flex-shrink: 0; margin-top: 2px; }
+    .ev-info { flex: 1; min-width: 0; }
+    .ev-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .ev-time { font-size: 12px; color: var(--text-sec); }
+    .ev-desc { font-size: 12px; color: var(--text-sec); margin-top: 3px; white-space: pre-wrap; }
+
+    .empty-day { text-align: center; color: var(--text-sec); font-size: 14px; padding: 28px 0; }
+    .empty-ico { font-size: 30px; margin-bottom: 8px; }
+
+    /* ── MODAL ── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(26,31,54,0.45); z-index: 100;
+      align-items: flex-end;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      padding: 20px 20px 44px;
+      width: 100%; max-height: 92vh; overflow-y: auto;
+      animation: slideUp 0.22s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .modal-handle {
+      width: 38px; height: 4px;
+      background: var(--border); border-radius: 2px;
+      margin: 0 auto 18px;
+    }
+    .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: var(--text-sec); margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .form-input {
+      width: 100%; border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 11px 13px;
+      font-size: 15px; font-family: inherit;
+      color: var(--text); background: var(--surface2);
+      outline: none; transition: border-color 0.15s;
+      appearance: none; -webkit-appearance: none;
+    }
+    .form-input:focus { border-color: var(--today-color); }
+    textarea.form-input { resize: none; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .color-picker { display: flex; gap: 10px; flex-wrap: wrap; }
+    .color-opt {
+      width: 30px; height: 30px; border-radius: 9px;
+      cursor: pointer; border: 3px solid transparent;
+      transition: transform 0.1s, border-color 0.1s;
+    }
+    .color-opt.sel { border-color: var(--text); transform: scale(1.15); }
+
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn {
+      flex: 1; padding: 14px; border: none; border-radius: 14px;
+      font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .btn-primary { background: var(--today-color); color: white; }
+    .btn-cancel  { background: var(--surface2); color: var(--text-sec); }
+    .btn-delete  { background: #FDE8EF; color: #E53E6B; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: #1A1F36; color: white;
+      padding: 11px 20px; border-radius: 12px;
+      font-size: 14px; font-weight: 500;
+      opacity: 0; transition: all 0.28s;
+      z-index: 999; white-space: nowrap; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── LOADER ── */
+    .loader {
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px; color: var(--text-sec); font-size: 14px; gap: 8px;
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--today-color);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-nav">
+    <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+    <div class="month-title" id="month-title"></div>
+    <button class="nav-btn" onclick="changeMonth(1)">›</button>
+  </div>
+  <button class="today-btn" onclick="goToday()">Сегодня</button>
+</div>
+
+<!-- WEEKDAYS -->
+<div class="weekdays">
+  <div class="weekday">Пн</div>
+  <div class="weekday">Вт</div>
+  <div class="weekday">Ср</div>
+  <div class="weekday">Чт</div>
+  <div class="weekday">Пт</div>
+  <div class="weekday we">Сб</div>
+  <div class="weekday we">Вс</div>
+</div>
+
+<!-- GRID -->
+<div class="calendar-grid" id="cal-grid"></div>
+
+<!-- DAY PANEL -->
+<div class="day-panel">
+  <div class="day-panel-header">
+    <div class="day-panel-title" id="panel-title">Выберите день</div>
+    <button class="add-btn" id="add-btn" style="display:none" onclick="openAdd()">+</button>
+  </div>
+  <div id="day-events"></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Новое событие</div>
+
+    <div class="form-group">
+      <label class="form-label">Название *</label>
+      <input type="text" id="f-title" class="form-input" placeholder="Например: Встреча с врачом">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Дата *</label>
+        <input type="date" id="f-date" class="form-input">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Время</label>
+        <input type="time" id="f-time" class="form-input">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Заметка</label>
+      <textarea id="f-desc" class="form-input" rows="3" placeholder="Дополнительная информация..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Цвет</label>
+      <div class="color-picker" id="color-picker"></div>
+    </div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════
+const SB_URL = 'https://hsvlfqjmcyrzlxulujhx.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzdmxmcWptY3lyemx4dWx1amh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjMxMTAsImV4cCI6MjA5OTU5OTExMH0.Tc5Oa1ASkBaHvaemb4v7XABT-4lrquZ8srQEeMTmldU';
+
+const { createClient } = supabase;
+const db = createClient(SB_URL, SB_KEY);
+
+const COLORS = [
+  { id:'c1', color:'#6B9BF2', bg:'#EBF1FF' },
+  { id:'c2', color:'#5CC8A0', bg:'#E6F7F1' },
+  { id:'c3', color:'#9B7FE8', bg:'#EEE9FF' },
+  { id:'c4', color:'#F281A8', bg:'#FDE8F0' },
+  { id:'c5', color:'#F5A95A', bg:'#FEF0E0' },
+  { id:'c6', color:'#4EC5C5', bg:'#E5F5F5' },
+];
+
+const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DAYS   = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+
+// ════════════════════════════════════
+// STATE
+// ════════════════════════════════════
+let events = [];
+let curYear, curMonth, selectedDate = null;
+let editId = null, selColor = 'c1';
+
+// ════════════════════════════════════
+// BOOT
+// ════════════════════════════════════
+(async () => {
+  const now = new Date();
+  curYear = now.getFullYear(); curMonth = now.getMonth();
+  document.getElementById('day-events').innerHTML =
+    '<div class="loader"><div class="spinner"></div> Загрузка...</div>';
+  await load();
+  render();
+  pick(today());
+})();
+
+// ════════════════════════════════════
+// SUPABASE
+// ════════════════════════════════════
+async function load() {
+  const { data, error } = await db.from('events').select('*')
+    .order('date').order('time', { nullsFirst: false });
+  if (!error) events = data || [];
+}
+
+async function upsert(ev) {
+  if (ev.id) {
+    const { error } = await db.from('events')
+      .update({ title:ev.title, date:ev.date, time:ev.time,
+                description:ev.description, color:ev.color })
+      .eq('id', ev.id);
+    if (error) { toast('Ошибка при сохранении'); return false; }
+  } else {
+    const { error } = await db.from('events')
+      .insert([{ title:ev.title, date:ev.date, time:ev.time,
+                 description:ev.description, color:ev.color }]);
+    if (error) { toast('Ошибка при сохранении'); return false; }
+  }
+  return true;
+}
+
+async function remove(id) {
+  const { error } = await db.from('events').delete().eq('id', id);
+  return !error;
+}
+
+// ════════════════════════════════════
+// RENDER CALENDAR
+// ════════════════════════════════════
+function render() {
+  document.getElementById('month-title').textContent = MONTHS[curMonth] + ' ' + curYear;
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  const first = new Date(curYear, curMonth, 1);
+  const last  = new Date(curYear, curMonth + 1, 0);
+  const now   = new Date();
+
+  let dow = first.getDay();
+  dow = dow === 0 ? 6 : dow - 1;
+
+  const prevLast = new Date(curYear, curMonth, 0).getDate();
+  for (let i = dow - 1; i >= 0; i--)
+    grid.appendChild(cell(curYear, curMonth - 1, prevLast - i, true, now));
+
+  for (let d = 1; d <= last.getDate(); d++)
+    grid.appendChild(cell(curYear, curMonth, d, false, now));
+
+  const total = dow + last.getDate();
+  const fill  = total <= 35 ? 35 - total : 42 - total;
+  for (let d = 1; d <= fill; d++)
+    grid.appendChild(cell(curYear, curMonth + 1, d, true, now));
+}
+
+function cell(y, m, d, other, now) {
+  const ds     = fmtDate(y, m, d);
+  const todayS = today();
+  const past   = ds < todayS;
+  const isToday = ds === todayS;
+  const isSel  = ds === selectedDate;
+
+  const el = document.createElement('div');
+  el.className = 'day-cell' +
+    (other   ? ' other-month' : '') +
+    (past    ? ' past-day'    : '') +
+    (isToday ? ' today-cell'  : '') +
+    (isSel   ? ' selected'    : '');
+  el.onclick = () => pick(ds);
+
+  const num = document.createElement('div');
+  num.className = 'day-num';
+  num.textContent = d;
+  el.appendChild(num);
+
+  if (!other) {
+    const dayEvs = events.filter(e => e.date === ds);
+    if (dayEvs.length) {
+      const dots = document.createElement('div');
+      dots.className = 'event-dots';
+      dayEvs.slice(0, 3).forEach(ev => {
+        const evMs = new Date(ev.date + (ev.time ? 'T'+ev.time : 'T23:59')).getTime();
+        const c = COLORS.find(c => c.id === ev.color) || COLORS[0];
+        const dot = document.createElement('div');
+        dot.className = 'event-dot' + (evMs < now.getTime() ? ' ev-past' : '');
+        dot.style.cssText = `background:${c.bg};color:${c.color}`;
+        dot.textContent = ev.title;
+        dots.appendChild(dot);
+      });
+      if (dayEvs.length > 3) {
+        const more = document.createElement('div');
+        more.className = 'more-count';
+        more.textContent = `+${dayEvs.length - 3}`;
+        dots.appendChild(more);
+      }
+      el.appendChild(dots);
+    }
+  }
+  return el;
+}
+
+function fmtDate(y, m, d) {
+  const mo = ((m % 12) + 12) % 12;
+  let yy = y;
+  if (m < 0) yy--;
+  if (m > 11) yy++;
+  return `${yy}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function today() {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+}
+
+// ════════════════════════════════════
+// SELECT DAY
+// ════════════════════════════════════
+function pick(ds) {
+  selectedDate = ds;
+  render();
+  const [y,m,d] = ds.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  document.getElementById('panel-title').textContent =
+    `${DAYS[dt.getDay()]}, ${d} ${MONTHS[m-1]}`;
+  document.getElementById('add-btn').style.display = 'flex';
+  renderDay(ds);
+  document.querySelector('.day-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderDay(ds) {
+  const cont = document.getElementById('day-events');
+  const now  = new Date();
+  const list = events.filter(e => e.date === ds)
+    .sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99'));
+
+  if (!list.length) {
+    cont.innerHTML = `<div class="empty-day"><div class="empty-ico">📅</div>Нет событий.<br>Нажми + чтобы добавить.</div>`;
+    return;
+  }
+
+  cont.innerHTML = '';
+  list.forEach(ev => {
+    const evMs = new Date(ev.date + (ev.time ? 'T'+ev.time : 'T23:59')).getTime();
+    const past = evMs < now.getTime();
+    const c = COLORS.find(c => c.id === ev.color) || COLORS[0];
+    const card = document.createElement('div');
+    card.className = 'event-card' + (past ? ' ev-past' : '');
+    card.style.background = c.bg;
+    card.innerHTML = `
+      <div class="ev-bar" style="background:${c.color}"></div>
+      <div class="ev-info">
+        <div class="ev-title">${ev.title}</div>
+        ${ev.time ? `<div class="ev-time">⏰ ${ev.time}</div>` : ''}
+        ${ev.description ? `<div class="ev-desc">${ev.description}</div>` : ''}
+      </div>`;
+    card.onclick = () => openEdit(ev);
+    cont.appendChild(card);
+  });
+}
+
+// ════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════
+function changeMonth(dir) {
+  curMonth += dir;
+  if (curMonth < 0)  { curMonth = 11; curYear--; }
+  if (curMonth > 11) { curMonth = 0;  curYear++; }
+  render();
+}
+
+function goToday() {
+  const n = new Date();
+  curYear = n.getFullYear(); curMonth = n.getMonth();
+  render();
+  pick(today());
+}
+
+// ════════════════════════════════════
+// MODAL
+// ════════════════════════════════════
+function buildCP() {
+  const cp = document.getElementById('color-picker');
+  cp.innerHTML = '';
+  COLORS.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'color-opt' + (c.id === selColor ? ' sel' : '');
+    el.style.background = c.color;
+    el.onclick = () => { selColor = c.id; buildCP(); };
+    cp.appendChild(el);
+  });
+}
+
+function openAdd() {
+  editId = null; selColor = 'c1';
+  document.getElementById('modal-title').textContent = 'Новое событие';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-date').value  = selectedDate || today();
+  document.getElementById('f-time').value  = '';
+  document.getElementById('f-desc').value  = '';
+  buildCP();
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn btn-cancel" onclick="closeModal()">Отмена</button>
+    <button class="btn btn-primary" onclick="submit()">Сохранить</button>`;
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-title').focus(), 300);
+}
+
+function openEdit(ev) {
+  editId = ev.id; selColor = ev.color || 'c1';
+  document.getElementById('modal-title').textContent = 'Редактировать';
+  document.getElementById('f-title').value = ev.title;
+  document.getElementById('f-date').value  = ev.date;
+  document.getElementById('f-time').value  = ev.time || '';
+  document.getElementById('f-desc').value  = ev.description || '';
+  buildCP();
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn btn-delete" onclick="del('${ev.id}')">Удалить</button>
+    <button class="btn btn-primary" onclick="submit()">Сохранить</button>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+async function submit() {
+  const title = document.getElementById('f-title').value.trim();
+  const date  = document.getElementById('f-date').value;
+  if (!title || !date) { toast('Заполни название и дату'); return; }
+  closeModal();
+  const ok = await upsert({
+    id: editId || undefined,
+    title, date,
+    time: document.getElementById('f-time').value || null,
+    description: document.getElementById('f-desc').value.trim() || null,
+    color: selColor,
+  });
+  if (ok) {
+    await load(); render();
+    if (selectedDate) renderDay(selectedDate);
+    toast(editId ? 'Обновлено ✓' : 'Добавлено ✓');
+  }
+}
+
+async function del(id) {
+  if (!confirm('Удалить событие?')) return;
+  closeModal();
+  const ok = await remove(id);
+  if (ok) { await load(); render(); if (selectedDate) renderDay(selectedDate); toast('Удалено'); }
+}
+
+// ════════════════════════════════════
+// TOAST
+// ════════════════════════════════════
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
